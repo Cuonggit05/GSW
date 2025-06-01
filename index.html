@@ -4,129 +4,137 @@
   <meta charset="UTF-8" />
   <title>Tỏ tình bằng QR</title>
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       overflow: hidden;
-      background: pink;
+      background: black;
+      height: 100%;
       font-family: 'Arial', sans-serif;
     }
 
+    .scene {
+      width: 100vw;
+      height: 100vh;
+      perspective: 1000px;
+      perspective-origin: center;
+      overflow: hidden;
+    }
+
+    .world {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease;
+      position: relative;
+    }
+
     .heart {
-      width: 10px;
-      height: 10px;
+      width: 20px;
+      height: 20px;
       position: absolute;
       transform: rotate(45deg);
-      animation: float 6s infinite ease-in;
-      background: red; /* Mặc định, sẽ override JS */
+      animation: pop 4s ease-in-out forwards;
+      background: red;
     }
 
     .heart::before,
     .heart::after {
       content: "";
-      width: 10px;
-      height: 10px;
+      width: 20px;
+      height: 20px;
       position: absolute;
       border-radius: 50%;
-      background: red; /* Mặc định, sẽ override JS */
+      background: red;
     }
 
     .heart::before {
-      top: -5px;
+      top: -10px;
       left: 0;
     }
 
     .heart::after {
-      left: -5px;
+      left: -10px;
       top: 0;
     }
 
-    @keyframes float {
+    @keyframes pop {
       0% {
-        transform: translateY(100vh) rotate(45deg);
+        opacity: 0;
+        transform: scale(0.5) rotate(45deg) translateZ(0);
+      }
+      10% {
         opacity: 1;
+        transform: scale(1.2) rotate(45deg) translateZ(200px);
+      }
+      80% {
+        opacity: 1;
+        transform: scale(1) rotate(45deg) translateZ(0);
       }
       100% {
-        transform: translateY(-10vh) rotate(45deg);
         opacity: 0;
+        transform: scale(0.5) rotate(45deg) translateZ(-200px);
       }
     }
 
     .message {
       position: absolute;
-      font-size: 20px;
-      animation: floatText 8s infinite ease-in-out;
+      font-size: 24px;
       font-weight: bold;
-      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+      color: white;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 20px #ff00ff,
+        0 0 30px #ff00ff,
+        0 0 40px #ff00ff,
+        0 0 55px #ff00ff,
+        0 0 75px #ff00ff;
+      animation: appear 5s ease-in-out forwards, neonGlow 2s infinite alternate;
     }
 
-    @keyframes floatText {
+    @keyframes appear {
       0% {
-        transform: translateY(100vh);
         opacity: 0;
+        transform: scale(0.5) translateZ(0);
       }
-      50% {
+      10% {
         opacity: 1;
+        transform: scale(1.1) translateZ(100px);
+      }
+      80% {
+        opacity: 1;
+        transform: scale(1) translateZ(0);
       }
       100% {
-        transform: translateY(-10vh);
         opacity: 0;
+        transform: scale(0.5) translateZ(-100px);
+      }
+    }
+
+    @keyframes neonGlow {
+      0% {
+        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
+      }
+      50% {
+        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+      }
+      100% {
+        text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px #ff00ff, 0 0 30px #ff00ff;
       }
     }
   </style>
 </head>
 <body>
+<div class="scene">
+  <div class="world" id="world"></div>
+</div>
 
 <script>
-  // Màu trái tim nổi bật trên nền hồng
   const pastelColors = [
-    "#D32F2F", // đỏ đậm
-    "#C2185B", // hồng đậm hơn
-    "#E64A19", // cam đỏ
-    "#F57C00", // cam sáng
-    "#7B1FA2", // tím đậm
-    "#1976D2", // xanh dương đậm
-    "#512DA8"  // tím đậm hơn
+    "#D32F2F", "#C2185B", "#E64A19", "#F57C00", "#7B1FA2", "#1976D2", "#512DA8"
   ];
 
-  // Tạo trái tim nhiều màu
-  for (let i = 0; i < 60; i++) {
-    const heart = document.createElement("div");
-    heart.className = "heart";
-    const color = pastelColors[Math.floor(Math.random() * pastelColors.length)];
-    heart.style.left = Math.random() * 100 + "vw";
-    heart.style.animationDuration = 4 + Math.random() * 5 + "s";
-
-    // Gán màu cho trái tim và các phần ::before ::after
-    heart.style.background = color;
-    heart.style.setProperty('--heart-color', color);
-
-    // Vì không thể gán trực tiếp style cho ::before và ::after qua JS,
-    // ta sẽ tạo CSS riêng cho từng trái tim theo index
-    heart.style.position = 'absolute';
-
-    // Gán id riêng để thêm style cho ::before ::after
-    heart.dataset.color = color;
-
-    document.body.appendChild(heart);
-  }
-
-  // Thêm CSS cho ::before và ::after từng trái tim
-  // Lấy tất cả trái tim và gán style ::before, ::after qua CSSOM
-  const styleSheet = document.createElement('style');
-  document.head.appendChild(styleSheet);
-
-  const hearts = document.querySelectorAll('.heart');
-  hearts.forEach((heart, index) => {
-    const color = heart.dataset.color;
-    styleSheet.sheet.insertRule(`
-      .heart:nth-child(${index + 1})::before,
-      .heart:nth-child(${index + 1})::after {
-        background: ${color} !important;
-      }
-    `, styleSheet.sheet.cssRules.length);
-  });
-
-  // Thông điệp
   const messages = [
     "Cảm ơn mọi người đã đồng hành cùng GSW",
     "Chúc clan GSW 1/6 vui vẻ ♥",
@@ -134,36 +142,72 @@
     "GOLDEN STAR WARRIOR",
   ];
 
-  const repeatCount = 30; // Gấp 3 lần
+  const world = document.getElementById("world");
 
-  // Màu chữ nổi bật trên nền hồng
-  const textColors = [
-    "#000000", // đen
-    "#FFFFFF", // trắng
-    "#1A237E", // xanh đậm
-    "#4A148C", // tím đậm
-    "#BF360C", // cam đậm
-  ];
+  // Tạo trái tim định kỳ
+  setInterval(() => {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    const color = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.top = Math.random() * 100 + "vh";
+    heart.style.background = color;
+    heart.dataset.color = color;
+    world.appendChild(heart);
 
-  // Gán màu chữ cố định cho từng thông điệp
-  const fixedColors = messages.map(() =>
-    textColors[Math.floor(Math.random() * textColors.length)]
-  );
+    const styleSheet = document.createElement('style');
+    document.head.appendChild(styleSheet);
+    const hearts = document.querySelectorAll('.heart');
+    const index = hearts.length;
+    styleSheet.sheet.insertRule(`
+      .heart:nth-child(${index})::before,
+      .heart:nth-child(${index})::after {
+        background: ${color} !important;
+      }
+    `, styleSheet.sheet.cssRules.length);
 
-  // Tạo nhiều bản sao cho từng câu
-  for (let i = 0; i < messages.length; i++) {
-    for (let j = 0; j < repeatCount; j++) {
-      const text = document.createElement("div");
-      text.className = "message";
-      text.textContent = messages[i];
-      text.style.left = Math.random() * 90 + "vw";
-      text.style.top = Math.random() * 100 + "vh";
-      text.style.animationDuration = 6 + Math.random() * 6 + "s";
-      text.style.color = fixedColors[i];
-      document.body.appendChild(text);
+    setTimeout(() => heart.remove(), 4000);
+  }, 300);
+
+  // Tạo thông điệp định kỳ
+  setInterval(() => {
+    const msg = document.createElement("div");
+    msg.className = "message";
+    const text = messages[Math.floor(Math.random() * messages.length)];
+    msg.textContent = text;
+    msg.style.left = Math.random() * 80 + "vw";
+    msg.style.top = Math.random() * 80 + "vh";
+    world.appendChild(msg);
+    setTimeout(() => msg.remove(), 5000);
+  }, 500);
+
+  // Xử lý xoay bằng chuột
+  let rotateX = 0;
+  let rotateY = 0;
+  let isDragging = false;
+  let lastX, lastY;
+
+  document.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (isDragging) {
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      rotateY += dx * 0.2;
+      rotateX -= dy * 0.2;
+      world.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      lastX = e.clientX;
+      lastY = e.clientY;
     }
-  }
-</script>
+  });
 
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+  });
+</script>
 </body>
 </html>
