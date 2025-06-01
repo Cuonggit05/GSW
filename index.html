@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tỏ tình bằng QR</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: pink;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .heart {
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      transform: rotate(45deg);
+      animation: float 6s infinite ease-in;
+      background: red; /* Mặc định, sẽ override JS */
+    }
+
+    .heart::before,
+    .heart::after {
+      content: "";
+      width: 10px;
+      height: 10px;
+      position: absolute;
+      border-radius: 50%;
+      background: red; /* Mặc định, sẽ override JS */
+    }
+
+    .heart::before {
+      top: -5px;
+      left: 0;
+    }
+
+    .heart::after {
+      left: -5px;
+      top: 0;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(45deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-10vh) rotate(45deg);
+        opacity: 0;
+      }
+    }
+
+    .message {
+      position: absolute;
+      font-size: 20px;
+      animation: floatText 8s infinite ease-in-out;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+
+    @keyframes floatText {
+      0% {
+        transform: translateY(100vh);
+        opacity: 0;
+      }
+      50% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-10vh);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<script>
+  // Màu trái tim nổi bật trên nền hồng
+  const pastelColors = [
+    "#D32F2F", // đỏ đậm
+    "#C2185B", // hồng đậm hơn
+    "#E64A19", // cam đỏ
+    "#F57C00", // cam sáng
+    "#7B1FA2", // tím đậm
+    "#1976D2", // xanh dương đậm
+    "#512DA8"  // tím đậm hơn
+  ];
+
+  // Tạo trái tim nhiều màu
+  for (let i = 0; i < 60; i++) {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    const color = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.animationDuration = 4 + Math.random() * 5 + "s";
+
+    // Gán màu cho trái tim và các phần ::before ::after
+    heart.style.background = color;
+    heart.style.setProperty('--heart-color', color);
+
+    // Vì không thể gán trực tiếp style cho ::before và ::after qua JS,
+    // ta sẽ tạo CSS riêng cho từng trái tim theo index
+    heart.style.position = 'absolute';
+
+    // Gán id riêng để thêm style cho ::before ::after
+    heart.dataset.color = color;
+
+    document.body.appendChild(heart);
+  }
+
+  // Thêm CSS cho ::before và ::after từng trái tim
+  // Lấy tất cả trái tim và gán style ::before, ::after qua CSSOM
+  const styleSheet = document.createElement('style');
+  document.head.appendChild(styleSheet);
+
+  const hearts = document.querySelectorAll('.heart');
+  hearts.forEach((heart, index) => {
+    const color = heart.dataset.color;
+    styleSheet.sheet.insertRule(`
+      .heart:nth-child(${index + 1})::before,
+      .heart:nth-child(${index + 1})::after {
+        background: ${color} !important;
+      }
+    `, styleSheet.sheet.cssRules.length);
+  });
+
+  // Thông điệp
+  const messages = [
+    "Cảm ơn mọi người đã đồng hành cùng GSWGSW",
+    "Chúc clan GSWGSW 1/6 vui vẻ ♥",
+    "Mãi giữ sự vui vẻ này nhé",
+    "Chúc các bạn nhỏ luôn hạnh phúc",
+    "GOLDEN STAR WARRIOR",
+  ];
+
+  const repeatCount = 30; // Gấp 3 lần
+
+  // Màu chữ nổi bật trên nền hồng
+  const textColors = [
+    "#000000", // đen
+    "#FFFFFF", // trắng
+    "#1A237E", // xanh đậm
+    "#4A148C", // tím đậm
+    "#BF360C", // cam đậm
+  ];
+
+  // Gán màu chữ cố định cho từng thông điệp
+  const fixedColors = messages.map(() =>
+    textColors[Math.floor(Math.random() * textColors.length)]
+  );
+
+  // Tạo nhiều bản sao cho từng câu
+  for (let i = 0; i < messages.length; i++) {
+    for (let j = 0; j < repeatCount; j++) {
+      const text = document.createElement("div");
+      text.className = "message";
+      text.textContent = messages[i];
+      text.style.left = Math.random() * 90 + "vw";
+      text.style.top = Math.random() * 100 + "vh";
+      text.style.animationDuration = 6 + Math.random() * 6 + "s";
+      text.style.color = fixedColors[i];
+      document.body.appendChild(text);
+    }
+  }
+</script>
+
+</body>
+</html>
